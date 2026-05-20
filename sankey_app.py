@@ -21,6 +21,15 @@ import base64
 from copy import deepcopy
 
 # ─────────────────────────────────────────────────────────────────────────────
+# VERIFICAÇÃO DO KALEIDO
+# ─────────────────────────────────────────────────────────────────────────────
+try:
+    import kaleido
+    KALEIDO_AVAILABLE = True
+except ImportError:
+    KALEIDO_AVAILABLE = False
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURAÇÃO DA PÁGINA
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -276,7 +285,11 @@ def exportar_html(fig: go.Figure) -> bytes:
 
 
 def exportar_png(fig: go.Figure) -> bytes:
-    """Exporta a figura como PNG a 96 DPI aprox. (scale=1). Requer kaleido."""
+    """Exporta a figura como PNG."""
+    
+    if not KALEIDO_AVAILABLE:
+        return None
+
     try:
         return fig.to_image(format="png", scale=1)
     except Exception:
@@ -284,6 +297,15 @@ def exportar_png(fig: go.Figure) -> bytes:
 
 
 def exportar_jpg_300dpi(fig: go.Figure) -> bytes:
+    """Exporta JPEG 300 DPI."""
+
+    if not KALEIDO_AVAILABLE:
+        return None
+
+    try:
+        return fig.to_image(format="jpeg", scale=3.125)
+    except Exception:
+        return None 
     """
     Exporta a figura como JPEG em alta resolução (~300 DPI).
     O Plotly/kaleido renderiza a 96 DPI internamente; para atingir 300 DPI
@@ -297,7 +319,16 @@ def exportar_jpg_300dpi(fig: go.Figure) -> bytes:
         return None
 
 
-def exportar_svg(fig: go.Figure) -> bytes:
+ def exportar_svg(fig: go.Figure) -> bytes:
+    """Exporta SVG."""
+
+    if not KALEIDO_AVAILABLE:
+        return None
+
+    try:
+        return fig.to_image(format="svg")
+    except Exception:
+        return None
     """
     Exporta a figura como SVG vetorial (resolução independente).
     Requer kaleido. SVGs são ideais para edição em Illustrator/Inkscape.
