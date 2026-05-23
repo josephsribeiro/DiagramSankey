@@ -470,18 +470,17 @@ with tab_dados:
             except Exception as e:
                 st.error(f"❌ Falha ao ler arquivo: {e}")
 
-        st.markdown("**Formato esperado:**")
+       st.markdown("**Formato esperado:**")
         st.dataframe(
-    pd.DataFrame({
-        "nivel1": ["Receita", "Receita"],
-        "nivel2": ["Produto A", "Produto B"],
-        "nivel3": ["Brasil", "EUA"],
-        "value": [60, 40]
-    }),
-    use_container_width=True,
-    hide_index=True,
-)
-
+            pd.DataFrame({
+                "nivel1": ["Receita", "Receita"],
+                "nivel2": ["Produto A", "Produto B"],
+                "nivel3": ["Brasil", "EUA"],
+                "value": [60, 40]
+            }),
+            use_container_width=True,
+            hide_index=True,
+        )
         # Download do template
         template = pd.DataFrame({
             "source": ["Categoria 1", "Categoria 1", "Categoria 2"],
