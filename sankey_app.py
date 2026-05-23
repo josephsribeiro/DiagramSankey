@@ -170,7 +170,7 @@ def validar_dados(df: pd.DataFrame) -> tuple[bool, str]:
 
 def normalizar_para_percentual(df: pd.DataFrame) -> pd.DataFrame:
     """Normaliza os valores para que a soma total seja 100%."""
-    
+
     df = df.copy()
     total = df["value"].sum()
 
@@ -180,32 +180,20 @@ def normalizar_para_percentual(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# INSERIR AQUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-
 def converter_multinivel_para_links(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Converte colunas multinível em pares source-target.
-    """
+    """Converte colunas multinível em pares source-target."""
 
     df = df.copy()
-
     colunas = list(df.columns)
-
     niveis = [c for c in colunas if c != "value"]
-
     links = []
 
     for _, row in df.iterrows():
-
         valor = row["value"]
-
         for i in range(len(niveis) - 1):
-
             origem = row[niveis[i]]
             destino = row[niveis[i + 1]]
-
             if pd.notnull(origem) and pd.notnull(destino):
-
                 links.append({
                     "source": origem,
                     "target": destino,
@@ -214,8 +202,6 @@ def converter_multinivel_para_links(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(links)
 
-
-# A FUNÇÃO construir_sankey COMEÇA AQUI ↓↓↓↓↓↓↓↓↓↓↓↓
 
 def construir_sankey(
     df: pd.DataFrame,
@@ -232,15 +218,12 @@ def construir_sankey(
 ) -> go.Figure:
     """Constrói a figura Plotly Sankey a partir do DataFrame de fluxos."""
 
- # Converte estrutura multinível automaticamente (se necessário)
+    # Converte estrutura multinível automaticamente (se necessário)
     if not {"source", "target"}.issubset(df.columns):
         df = converter_multinivel_para_links(df)
 
     if usar_percentual:
         df = normalizar_para_percentual(df)
-      # Converte estrutura multinível para source-target
-if not {"source", "target"}.issubset(df.columns):
-    df = converter_multinivel_para_links(df)
 
     # Cria lista única de nós na ordem de aparição
     todos_nos = pd.unique(df[["source", "target"]].values.ravel()).tolist()
@@ -339,7 +322,7 @@ def exportar_html(fig: go.Figure) -> bytes:
 
 def exportar_png(fig: go.Figure) -> bytes:
     """Exporta a figura como PNG."""
-    
+
     if not KALEIDO_AVAILABLE:
         return None
 
@@ -470,7 +453,7 @@ with tab_dados:
             except Exception as e:
                 st.error(f"❌ Falha ao ler arquivo: {e}")
 
-       st.markdown("**Formato esperado:**")
+        st.markdown("**Formato esperado:**")
         st.dataframe(
             pd.DataFrame({
                 "nivel1": ["Receita", "Receita"],
@@ -481,6 +464,7 @@ with tab_dados:
             use_container_width=True,
             hide_index=True,
         )
+
         # Download do template
         template = pd.DataFrame({
             "source": ["Categoria 1", "Categoria 1", "Categoria 2"],
@@ -593,9 +577,6 @@ with tab_grafico:
         # ── Exportação ──
         st.divider()
         st.markdown('<div class="section-header">⬇️ Exportar gráfico</div>', unsafe_allow_html=True)
-
-        # Gera todos os formatos uma única vez (evita múltiplos renders)
-        _kaleido_ok = None  # será resolvido na primeira tentativa
 
         def _checar_kaleido(fig):
             """Tenta gerar PNG simples para verificar se kaleido está disponível."""
