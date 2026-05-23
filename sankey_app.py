@@ -25,8 +25,10 @@ from copy import deepcopy
 # ─────────────────────────────────────────────────────────────────────────────
 try:
     import kaleido
+    import plotly.io as pio
+
     KALEIDO_AVAILABLE = True
-except ImportError:
+except Exception:
     KALEIDO_AVAILABLE = False
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -146,23 +148,68 @@ PALETA_CORES = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def validar_dados(df: pd.DataFrame) -> tuple[bool, str]:
-    """Valida se o DataFrame possui as colunas obrigatórias e dados coerentes."""
-    colunas_req = {"source", "target", "value"}
-    colunas_df = set(df.columns.str.lower().str.strip())
-    if not colunas_req.issubset(colunas_df):
-        faltando = colunas_req - colunas_df
-        return False, f"Colunas ausentes: {', '.join(faltando)}"
+
     df.columns = df.columns.str.lower().str.strip()
+
+    if "value" not in df.columns:
+        return False, "A coluna 'value' é obrigatória."
+
+    colunas_niveis = [c for c in df.columns if c != "value"]
+
+    if len(colunas_niveis) < 2:
+        return False, "É necessário pelo menos 2 níveis além da coluna value."
+
     if df["value"].isnull().any():
         return False, "Coluna 'value' contém valores nulos."
+
     if (pd.to_numeric(df["value"], errors="coerce") < 0).any():
         return False, "Coluna 'value' contém valores negativos."
-    if df["source"].isnull().any() or df["target"].isnull().any():
-        return False, "Colunas 'source' ou 'target' contêm valores nulos."
+
     return True, "OK"
 
 
 def normalizar_para_percentual(df: pd.DataFrame) -> pd.DataFrame:
+  def converter_multinivel_para_links(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Converte colunas multinível em pares source-target.
+
+    Exemplo:
+    A | B | C | value
+
+    vira:
+    A -> B
+    B -> C
+    """
+
+    df = df.copy()
+
+    colunas = list(df.columns)
+
+    if "value" not in colunas:
+        raise ValueError("A coluna 'value' é obrigatória.")
+
+    niveis = [c for c in colunas if c != "value"]
+
+    links = []
+
+    for _, row in df.iterrows():
+
+        valor = row["value"]
+
+        for i in range(len(niveis) - 1):
+
+            origem = row[niveis[i]]
+            destino = row[niveis[i + 1]]
+
+            if pd.notnull(origem) and pd.notnull(destino):
+
+                links.append({
+                    "source": origem,
+                    "target": destino,
+                    "value": valor
+                })
+
+    return pd.DataFrame(links)
     """Normaliza os valores para que a soma total seja 100%."""
     df = df.copy()
     total = df["value"].sum()
@@ -188,6 +235,9 @@ def construir_sankey(
 
     if usar_percentual:
         df = normalizar_para_percentual(df)
+      # Converte estrutura multinível para source-target
+if not {"source", "target"}.issubset(df.columns):
+    df = converter_multinivel_para_links(df)
 
     # Cria lista única de nós na ordem de aparição
     todos_nos = pd.unique(df[["source", "target"]].values.ravel()).tolist()
@@ -291,48 +341,38 @@ def exportar_png(fig: go.Figure) -> bytes:
         return None
 
     try:
-        return fig.to_image(format="png", scale=1)
+        return fig.to_image(format="png", scale=2)
     except Exception:
         return None
 
 
 def exportar_jpg_300dpi(fig: go.Figure) -> bytes:
-    """Exporta JPEG 300 DPI."""
-
-    if not KALEIDO_AVAILABLE:
-        return None
-
-    try:
-        return fig.to_image(format="jpeg", scale=3.125)
-    except Exception:
-        return None 
     """
     Exporta a figura como JPEG em alta resolução (~300 DPI).
-    O Plotly/kaleido renderiza a 96 DPI internamente; para atingir 300 DPI
-    usamos scale = 300/96 ≈ 3.125, o que triplica a resolução de pixel.
-    Requer kaleido.
+
+    O Plotly/kaleido renderiza a 96 DPI internamente;
+    para atingir ~300 DPI usamos scale = 300/96 ≈ 3.125.
     """
-    try:
-        # scale ≈ 3.125 → ~300 DPI a partir da base de 96 DPI do kaleido
-        return fig.to_image(format="jpeg", scale=3.125)
-    except Exception:
-        return None
-
-
- def exportar_svg(fig: go.Figure) -> bytes:
-    """Exporta SVG."""
 
     if not KALEIDO_AVAILABLE:
         return None
 
     try:
-        return fig.to_image(format="svg")
+        return fig.to_image(format="jpeg", scale=3.125)
     except Exception:
         return None
+
+
+def exportar_svg(fig: go.Figure) -> bytes:
     """
     Exporta a figura como SVG vetorial (resolução independente).
-    Requer kaleido. SVGs são ideais para edição em Illustrator/Inkscape.
+
+    SVG é ideal para edição no Illustrator, Inkscape ou Affinity Designer.
     """
+
+    if not KALEIDO_AVAILABLE:
+        return None
+
     try:
         return fig.to_image(format="svg")
     except Exception:
@@ -429,10 +469,12 @@ with tab_dados:
 
         st.markdown("**Formato esperado:**")
         st.dataframe(
-            pd.DataFrame({"source": ["A", "A"], "target": ["B", "C"], "value": [60, 40]}),
-            use_container_width=True,
-            hide_index=True,
-        )
+           pd.DataFrame({
+    "nivel1": ["Receita", "Receita"],
+    "nivel2": ["Produto A", "Produto B"],
+    "nivel3": ["Brasil", "EUA"],
+    "value": [60, 40]
+})
 
         # Download do template
         template = pd.DataFrame({
