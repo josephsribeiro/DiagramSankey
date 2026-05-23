@@ -169,24 +169,27 @@ def validar_dados(df: pd.DataFrame) -> tuple[bool, str]:
 
 
 def normalizar_para_percentual(df: pd.DataFrame) -> pd.DataFrame:
-  def converter_multinivel_para_links(df: pd.DataFrame) -> pd.DataFrame:
+    """Normaliza os valores para que a soma total seja 100%."""
+    
+    df = df.copy()
+    total = df["value"].sum()
+
+    if total > 0:
+        df["value"] = (df["value"] / total * 100).round(2)
+
+    return df
+
+
+# INSERIR AQUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+
+def converter_multinivel_para_links(df: pd.DataFrame) -> pd.DataFrame:
     """
     Converte colunas multinível em pares source-target.
-
-    Exemplo:
-    A | B | C | value
-
-    vira:
-    A -> B
-    B -> C
     """
 
     df = df.copy()
 
     colunas = list(df.columns)
-
-    if "value" not in colunas:
-        raise ValueError("A coluna 'value' é obrigatória.")
 
     niveis = [c for c in colunas if c != "value"]
 
@@ -210,13 +213,9 @@ def normalizar_para_percentual(df: pd.DataFrame) -> pd.DataFrame:
                 })
 
     return pd.DataFrame(links)
-    """Normaliza os valores para que a soma total seja 100%."""
-    df = df.copy()
-    total = df["value"].sum()
-    if total > 0:
-        df["value"] = (df["value"] / total * 100).round(2)
-    return df
 
+
+# A FUNÇÃO construir_sankey COMEÇA AQUI ↓↓↓↓↓↓↓↓↓↓↓↓
 
 def construir_sankey(
     df: pd.DataFrame,
@@ -234,6 +233,9 @@ def construir_sankey(
     """Constrói a figura Plotly Sankey a partir do DataFrame de fluxos."""
 
     if usar_percentual:
+      # Converte estrutura multinível automaticamente
+if not {"source", "target"}.issubset(df.columns):
+    df = converter_multinivel_para_links(df)
         df = normalizar_para_percentual(df)
       # Converte estrutura multinível para source-target
 if not {"source", "target"}.issubset(df.columns):
