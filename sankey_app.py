@@ -232,11 +232,11 @@ def construir_sankey(
 ) -> go.Figure:
     """Constrói a figura Plotly Sankey a partir do DataFrame de fluxos."""
 
- if usar_percentual:
-    df = normalizar_para_percentual(df)
-      # Converte estrutura multinível automaticamente
-if not {"source", "target"}.issubset(df.columns):
-    df = converter_multinivel_para_links(df)
+ # Converte estrutura multinível automaticamente (se necessário)
+    if not {"source", "target"}.issubset(df.columns):
+        df = converter_multinivel_para_links(df)
+
+    if usar_percentual:
         df = normalizar_para_percentual(df)
       # Converte estrutura multinível para source-target
 if not {"source", "target"}.issubset(df.columns):
