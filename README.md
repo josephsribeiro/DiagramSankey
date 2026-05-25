@@ -48,13 +48,3 @@ O usuário pode controlar cada aspecto da visualização: cores, opacidade, orde
 
 ```bash
 pip install streamlit pandas numpy plotly openpyxl
-
-**Ou, se preferir, crie um arquivo requirements.txt:**
-
-streamlit>=1.28.0
-pandas>=2.0.0
-plotly>=5.18.0
-openpyxl>=3.1.0
-
-**E instale com:**
-pip install -r requirements.txt
