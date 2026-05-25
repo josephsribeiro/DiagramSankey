@@ -3,7 +3,7 @@
 **Gerador Avançado e Interativo de Diagramas de Sankey**  
 *Streamlit + Plotly – para análises científicas e de negócios*
 
-![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)
+![Streamlit App](https://diagramsankey.streamlit.app/)
 
 ---
 
