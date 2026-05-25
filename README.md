@@ -48,3 +48,4 @@ O usuário pode controlar cada aspecto da visualização: cores, opacidade, orde
 
 ```bash
 pip install streamlit pandas numpy plotly openpyxl
+
